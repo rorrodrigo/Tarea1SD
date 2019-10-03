@@ -1,0 +1,71 @@
+version: "3"
+services:
+  headnode:
+    build:
+      context: ./headnode
+      dockerfile: Dockerfile
+    command: python3 /headnode/headnode.py
+    volumes:
+      - ./headnode:/headnode/
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+      - "5002:5002"
+      - "5003:5003"
+      # - "5007:5007"
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    command: python3 /client/client.py
+    volumes:
+      - ./client:/client/
+    ports:
+      - "5000:5000"
+    # The keyword 'network_mode' is used to define the network type.
+    # Here we define that the container can access to the 'localhost' of the computer.
+    depends_on:
+      - headnode
+      - datanode3
+
+  datanode1:
+    build:
+      context: ./datanode1
+      dockerfile: Dockerfile
+    command: python3 /datanode1/datanode1.py
+    volumes:
+      - ./datanode1:/datanode1/
+    ports:
+      - "5001:5001"
+      # - "5007:5007"
+    depends_on:
+      - headnode
+
+  datanode2:
+    build:
+      context: ./datanode2
+      dockerfile: Dockerfile
+    command: python3 /datanode2/datanode2.py
+    volumes:
+      - ./datanode2:/datanode2/
+    ports:
+      - "5002:5002"
+      # - "5007:5007"
+    depends_on:
+      - headnode
+      - datanode1
+
+  datanode3:
+    build:
+      context: ./datanode3
+      dockerfile: Dockerfile
+    command: python3 /datanode3/datanode3.py
+    volumes:
+      - ./datanode3:/datanode3/
+    ports:
+      - "5003:5003"
+      # - "5007:5007"
+    depends_on:
+      - headnode
+      - datanode2
