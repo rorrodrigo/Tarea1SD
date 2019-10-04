@@ -6,7 +6,7 @@ Manuel Sandoval 201573604-9
 Debido a que no fue posible crear un contenedor que permitiera ingresar los mensajes por consola, se usan mensajes predefinidos.
 Cada archivo .py posee su propia carpeta donde guarda y maneja archivos que utiliza.
 
-#Ejeccución de Actividades
+# Ejeccución de Actividades
 Para ejecutar cada actividad, ir a la carpeta correspondiente a cada una, abril un terminal y ejecutar los comandos:
   $ sudo docker-compose build 
   
@@ -14,9 +14,9 @@ Para ejecutar cada actividad, ir a la carpeta correspondiente a cada una, abril 
   
 Para la segunda actividad, una vez finalizada la ejecución, como el cliente abandona el servidor, este ultimo quedará ejecutando el multicasting cada 5 segundos, por lo que se deberá usar ctrl+c para detener el proceso.
 
-#Rutas de los archivos
+# Rutas de los archivos
 
-##Actividad 1
+## Actividad 1
 
 ### Archivo Cliente
 
