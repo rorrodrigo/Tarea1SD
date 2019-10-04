@@ -7,5 +7,8 @@ Debido a que no fue posible crear un contenedor que permitiera ingresar los mens
 predefinidos.
 Cada archivo .py posee su propia carpeta donde guarda y maneja archivos que utiliza.
 Para ejecutar cada actividad, ir a la carpeta correspondiente a cada una y ejecutar los comandos:
-  >>docker-compose build 
-  >>docker-compose up
+  >>sudo docker-compose build 
+  >>sudo docker-compose up
+  
+Una vez finalizada la ejecución, como el cliente abandona el servidor, este ultimo quedará ejecutando, por lo que
+se deberá usar ctrl+c.
