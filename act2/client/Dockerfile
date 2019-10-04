@@ -1,7 +1,5 @@
-FROM ubuntu:latest
-
-RUN apt-get update \
-	&& apt-get -y install python3
-COPY client.py /client/
+FROM python:latest
 
 WORKDIR /client/
+ENV PYTHONUNBUFFERED 1
+CMD        ["python", "./client.py"]

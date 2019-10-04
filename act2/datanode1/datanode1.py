@@ -1,59 +1,61 @@
 import socket
 import os.path
-import threading
 import sys
 import struct
+from _thread import *
+import threading
 
-kill = False
+IP_HOST_D = '0.0.0.0'
+PORT = 5000
+
+
+socket_d = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+socket_d.bind((IP_HOST_D,PORT))
+socket_d.listen (10)
+
+mutex = threading.Lock()
+
+def Main(s,addr):
+    while True:
+        mensaje = s.recv(1024)
+        if not mensaje:
+            s.close()
+            break
+
+        mensaje = mensaje.decode('utf-8').strip()
+
+        if(mensaje == "Cerrar_Servidor"):
+            print("Cerrando Servidor")
+            s.close()
+            break
+            
+        mutex.acquire()
+        archivo_data = open("data.txt","a")
+        archivo_data.write("Mensaje: " + mensaje + "\n")
+        print(mensaje)
+        archivo_data.close()
+        mutex.release()
+
+        s.send("ACK".encode('utf-8'))
 
 def responder_multicast():
     MCAST_GRP = '224.1.1.1'
-    MCAST_PORT = 5007
+    MCAST_PORT = 10000
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(('', MCAST_PORT))
     mreq = struct.pack("4sl", socket.inet_aton(MCAST_GRP), socket.INADDR_ANY)
-
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
-    global kill
+
     while True:
-        if(kill == True):
-            return
-        else:
-            data, address = sock.recvfrom(1024)
-            if(data.decode() == "status"):
-                sock.sendto('1-'.encode(), address)
+        data, address = sock.recvfrom(1024)
+        if(data.decode('utf-8') == "status?"):
+            sock.sendto('1'.encode(), address)
 
-host = "localhost"
-puerto = 5001
+start_new_thread(responder_multicast, ())
 
-#Creación socket (lado datanode)
-obj = socket.socket()
-#Conexión con el servidor.
-obj.connect((host, puerto))
-
-try:
-    reg = "data.txt"
-    if (os.path.isfile(reg)):
-        archivo = open(reg, "a")
-    else:
-        archivo = open(reg, "w")
-
-#crear un thread que ejecute la funcion responder_multicast()
-finally:
-    t = threading.Thread(target=responder_multicast)
-    t.start()
-    while True:
-        mensaje = obj.recv(1024)
-        msj = (mensaje.decode())
-        if(msj== "cerrar servidor"):
-            kill = True
-            break
-        archivo.write(" Mensaje: " +msj+"\n")
-        respuesta = ("ack")
-        obj.send(respuesta.encode())
-
-#Cerramos la instancia del objeto servidor
-obj.close()
-archivo.close()
+while True:
+    connection, client_address = socket_d.accept()
+    print('connection from', client_address)
+    start_new_thread(Main, (connection, client_address,))

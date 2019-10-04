@@ -4,157 +4,88 @@ import os.path
 import random
 import time
 import threading
+from _thread import *
 
-kill = False
+IP_HOST = '0.0.0.0'
+PORT = 5000
 
-global mutex
-mutex = threading.Lock()
-mutex.acquire()
-mutex.release()
+socket_cli = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+socket_cli.bind((IP_HOST,PORT))
+socket_cli.listen(10)
+
+datanodes = ['172.1.1.11','172.1.1.12','172.1.1.13']
+nodos_vivos = ''
+
+def Main(socket_c,addr):
+    global nodos_vivos
+    while True:
+        m_recibido = socket_c.recv(1024)
+        if not m_recibido:
+            print("Closing connection with", client_address)
+            socket_c.close()
+            break
+        m_recibido = m_recibido.decode('utf-8').strip()
+
+        if m_recibido == 'Cerrar_Servidor':
+            print("Cerrando Servidor")
+            socket_c.close()
+            break
+
+        while True:
+            random_node = random.randint(0,2)
+            if str(random_node+1) in nodos_vivos:
+                break
+            
+
+        random_node = random.randint(0,2)
+        IP_HOST_D = datanodes[random_node]
+        PORT_D = 5000
+        print("Seleccionado nodo ", random_node+1)
+        socket_datanode = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        socket_datanode.connect((IP_HOST_D,PORT_D))
+        socket_datanode.send(m_recibido.encode('utf-8'))
+
+        respuesta_dn = socket_datanode.recv(1024)
+        respuesta_dn = respuesta_dn.decode('utf-8').strip()
+
+        if (respuesta_dn == "ACK"):
+            archivo_registro = open("registro_server.txt","a")
+            archivo_registro.write("Mensaje " + m_recibido +  " Guardado en el Datanode " + str(random_node+1) + "\n") #################
+            archivo_registro.close()
+            socket_c.send(("Mensaje Contenido en datanode " + str(random_node+1)).encode('utf-8'))
+
+
 
 def enviar_multicast():
-    global kill
-    if(kill == True):
-        return
-    else:
-        threading.Timer(5.0, enviar_multicast).start()
-        #print("empezo el multi\n")
-        MCAST_GRP = '224.1.1.1'
-        MCAST_PORT = 5007
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-        sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
-        sock.settimeout(0.5)
-        vivos = ""
-        try:
-            sock.sendto("status".encode(), (MCAST_GRP, MCAST_PORT))
+    MCAST_GRP = '224.1.1.1'
+    MCAST_PORT = 10000
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+    sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
+    sock.settimeout(0.2)
+    global nodos_vivos
+    try:
+        while True:
+            time.sleep(5)
+            nodos_vivos = ""
+            sock.sendto("status?".encode(), (MCAST_GRP, MCAST_PORT))
             while True:
                 try:
-                    data, server = sock.recvfrom(16)
+                    data, server = sock.recvfrom(1024)
+                    data = data.decode('utf-8').strip()
+                    nodos_vivos += data
+                    print (nodos_vivos)
+                    archivo_hb = open("hearbeat_server.txt", "a")
+                    archivo_hb.write(time.strftime("%c") + "   El Nodo "+ data + " se encuentra activo" + "\n")
+                    archivo_hb.close()
+
                 except socket.timeout:
-                    data = "".encode()
                     break
-                finally:
-                    vivos += data.decode()
-        finally:
-            reg = "hearbeat_server.txt"
-            if (os.path.isfile(reg)):
-                mutex.acquire()
-                archivo = open(reg, "a")
-            else:
-                mutex.acquire()
-                archivo = open(reg, "w")
-            archivo.write(time.strftime("%c") + "@" + vivos + "\n")
-            archivo.close()
-            mutex.release()
-            sock.close()
+    finally:
+        sock.close()
 
-#instanciamos un objeto para trabajar con el cliente
-ser_cli = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+start_new_thread(enviar_multicast, ())
 
-host="localhost"
-port = 5000
-ser_cli.bind((host, port))
-
-#lista con conexiones a los datanodes
-datanodes = []
-
-ser_dn1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-ser_dn1.bind(('localhost', 5001))
-ser_dn1.listen(1)
-print("Esperando al datanode 1...")
-cli1, addr1 = ser_dn1.accept()
-datanodes.append((ser_dn1,cli1,addr1))
-
-#ser_dn2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#ser_dn2.bind(('0.0.0.0', 5002))
-#ser_dn2.listen(1)
-#print("Esperando al datanode 2...")
-#cli2, addr2 = ser_dn2.accept()
-#datanodes.append((ser_dn2,cli2,addr2))
-
-#ser_dn3 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#ser_dn3.bind(('0.0.0.0', 5003))
-#ser_dn3.listen(1)
-#print("Esperando al datanode 3... ")
-#cli3, addr3 = ser_dn3.accept()
-#datanodes.append((ser_dn3,cli3,addr3))
-
-enviar_multicast()
-flag = True
-while flag:
-    #Aceptamos conexiones entrantes con el metodo listen. Por parámetro las conexiones simutáneas.
-    ser_cli.listen(5)
-    print("Esperando conexiones...")
-    cli, addr = ser_cli.accept()
-
-    while True:
-        #Recibimos el mensaje
-        recibido = cli.recv(1024)
-        rcb = recibido.decode()
-        if(recibido.decode() == "salir"):
-            cli.close()
-            break
-        elif(recibido.decode() == "cerrar servidor"):
-            cli.send(("Servidor Cerrado Correctamente").encode())
-            cli1.send(("cerrar servidor").encode())
-            #cli2.send(("cerrar servidor").encode())
-            #cli3.send(("cerrar servidor").encode())
-            cli1.close()
-            #cli2.close()
-            #cli3.close()
-            cli.close()
-            ser_cli.close()
-            ser_dn1.close()
-            #ser_dn2.close()
-            #ser_dn3.close()
-            flag = False
-            kill = True
-            break
-        #Si se reciben datos nos muestra la IP y el mensaje recibido
-        #print ("IP: " + str(addr[0]) + " Mensaje:" + recibido.decode())
-
-        flag = True
-        while flag:
-            flag2 = True
-            while(flag2):
-                try:
-                    mutex.acquire()
-                    archivo = open("hearbeat_server.txt","r")
-                    flag2 = False
-                except:
-                    mutex.release()
-                    flag2 = True
-
-            linea = archivo.readlines()[-1]
-            archivo.close()
-            mutex.release()
-            l = linea.strip().split("@")
-            l2 = l[1].strip().split("-")
-            l2.remove("")
-            if( len(l2) == 0):
-                continue
-            rand = int(random.choice(l2))
-            #enviar mensaje al datanode
-            ser_dn,cli_dn,addr_dn = datanodes[rand-1]
-            cli_dn.send(rcb.encode())
-            #esperar la respuesta desde el datanode de guardado exitoso
-            ser_dn.settimeout(0.2)
-            try:
-                respuesta_dn = cli_dn.recv(1024)
-                if(respuesta_dn.decode() == "ack"):
-                    #print(respuesta_dn.decode())
-                    flag = False
-            except socket.timeout:
-                flag = True
-
-        reg2 = "registro_server.txt"
-        if (os.path.isfile(reg2)):
-            archivo2 = open(reg2,"a")
-        else:
-            archivo2 = open(reg2,"w")
-        archivo2.write("IP: "+ str(addr[0])+ " - Mensaje: " + recibido.decode() + " - DataNode: " + str(rand) + "\n")
-        archivo2.close()
-        #Devolvemos un mensaje al cliente (el datanode que almacena su mensaje)
-        cli.send(("Mensaje Contenido en datanode " + str(rand)).encode())
-
-print("Servidor finalizado")
+while True:
+    connection, client_address = socket_cli.accept()
+    print('connection from', client_address)
+    start_new_thread(Main, (connection, client_address,))

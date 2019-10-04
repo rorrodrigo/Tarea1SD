@@ -1,7 +1,5 @@
-FROM ubuntu:latest
-
-RUN apt-get update \
-	&& apt-get -y install python3
-COPY datanode3.py /datanode3/
+FROM python:latest
 
 WORKDIR /datanode3/
+ENV PYTHONUNBUFFERED 1
+CMD        ["python", "./datanode3.py"]
