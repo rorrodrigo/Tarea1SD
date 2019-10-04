@@ -7,7 +7,9 @@ Debido a que no fue posible crear un contenedor que permitiera ingresar los mens
 Cada archivo .py posee su propia carpeta donde guarda y maneja archivos que utiliza.
 
 # Ejeccución de Actividades
+
 Para ejecutar cada actividad, ir a la carpeta correspondiente a cada una, abril un terminal y ejecutar los comandos:
+  
   $ sudo docker-compose build 
   
   $ sudo docker-compose up
