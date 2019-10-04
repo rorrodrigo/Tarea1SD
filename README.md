@@ -8,7 +8,7 @@ Cada archivo .py posee su propia carpeta donde guarda y maneja archivos que util
 
 # Ejeccución de Actividades
 
-Para ejecutar cada actividad, ir a la carpeta correspondiente a cada una, abril un terminal y ejecutar los comandos:
+Para ejecutar cada actividad, ir a la carpeta correspondiente a cada una, abrir un terminal y ejecutar los comandos:
   
   $ sudo docker-compose build 
   
