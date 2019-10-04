@@ -1,6 +1,12 @@
-FROM python:latest
+FROM ubuntu:latest
 
 WORKDIR /headnode/
+
 EXPOSE 5000
+
 ENV PYTHONUNBUFFERED 1
-CMD        ["python", "./headnode.py"]
+
+RUN apt-get update \
+	&& apt-get -y install python3
+
+COPY headnode.py /headnode/

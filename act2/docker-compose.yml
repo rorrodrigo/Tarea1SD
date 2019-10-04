@@ -11,7 +11,7 @@ services:
     build:
       context: ./headnode
       dockerfile: Dockerfile
-    # command: python3 /headnode/headnode.py
+    command: python3 /headnode/headnode.py
     volumes:
       - ./headnode:/headnode/
     networks:
@@ -24,7 +24,7 @@ services:
     build:
       context: ./datanode1
       dockerfile: Dockerfile
-    # command: python3 /datanode1/datanode1.py
+    command: python3 /datanode1/datanode1.py
     volumes:
       - ./datanode1:/datanode1/
     networks:
@@ -37,7 +37,7 @@ services:
     build:
       context: ./datanode2
       dockerfile: Dockerfile
-    # command: python3 /datanode2/datanode2.py
+    command: python3 /datanode2/datanode2.py
     volumes:
       - ./datanode2:/datanode2/
     networks:
@@ -50,7 +50,7 @@ services:
     build:
       context: ./datanode3
       dockerfile: Dockerfile
-    # command: python3 /datanode3/datanode3.py
+    command: python3 /datanode3/datanode3.py
     volumes:
       - ./datanode3:/datanode3/
     networks:
@@ -63,7 +63,7 @@ services:
     build:
       context: ./client
       dockerfile: Dockerfile
-    # command: python3 /client/client.py
+    command: python3 /client/client.py
     volumes:
       - ./client:/client/
     networks:
@@ -71,3 +71,6 @@ services:
         ipv4_address: "172.1.1.20"
     depends_on:
       - headnode
+      - datanode1
+      - datanode2
+      - datanode3

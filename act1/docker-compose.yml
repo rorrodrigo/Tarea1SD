@@ -1,0 +1,24 @@
+version: "3"
+services:
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    command: python3 /server/server.py
+    volumes:
+      - ./server:/server/
+    ports:
+      - 5000:5000
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    command: python3 /client/client.py
+    volumes:
+      - ./client:/client/
+    ports:
+      - "5000:5000"
+    network_mode: host
+    depends_on:
+      - server
